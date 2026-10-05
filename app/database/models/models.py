@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, TIMESTAMP, text, Boolean, ForeignKey, Text, Numeric, UUID
+from sqlalchemy import Column, Integer, String, TIMESTAMP, text, Boolean, ForeignKey, Text, Numeric, UUID, CheckConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, Relationship
 
@@ -38,12 +38,13 @@ class User(Base):
     role = relationship('Role')
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
 
-# table pour les categories
-class Category(Base):
-    __tablename__ = "categories"
+
+class Shop(Base):
+    """Informations de la boutique : une seule ligne (id = 1)."""
+    __tablename__ = "shop_settings"
+    __table_args__ = (CheckConstraint("id = 1", name="shop_settings_single_row"),)
     id = Column(Integer, primary_key=True, nullable=False)
-    category_name = Column(String, nullable=False)
-    color_hex = Column(String, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now"), nullable=False)
-
-
+    shop_name = Column(String(100), nullable=False)
+    city = Column(String(100), nullable=False)
+    currency = Column(String(3), nullable=False)
+    tax_rate = Column(Numeric(5, 2), nullable=False)
