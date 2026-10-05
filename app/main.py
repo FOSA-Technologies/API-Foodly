@@ -1,11 +1,10 @@
-
 from fastapi import FastAPI
 # from guard import SecurityConfig, SecurityMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 from .database import database
 from .database.models import models
-from .router import user, role_page, auth
+from .router import user, role_page, auth, shop
 import os
 # config = SecurityConfig(
 #     enable_rate_limiting=True,
@@ -43,9 +42,7 @@ models.Base.metadata.create_all(bind=database.engine)
 app.include_router(user.router)
 app.include_router(role_page.router)
 app.include_router(auth.router)
+app.include_router(shop.router)
 app.get('/')
 def root():
     return {"message": "Hello world"}
-
-
-
