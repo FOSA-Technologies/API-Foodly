@@ -16,7 +16,7 @@ class Page(Base):
     __tablename__ = "pages"
     id = Column(Integer, primary_key=True, nullable=False)
     page_name = Column(String(100), nullable=False)
-    page_path = Column(String(50), nullable=False)
+    page_path = Column(String(50), nullable=False, unique=True)
     roles = relationship('Role', secondary='roles_pages', back_populates="pages")
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
 
@@ -37,4 +37,3 @@ class User(Base):
     role_id = Column(Integer, ForeignKey('roles.id', ondelete="CASCADE"), nullable=False)
     role = relationship('Role')
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
-
