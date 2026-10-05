@@ -364,3 +364,8 @@ class PortfolioSupplyHistoryCreation(BaseModel):
     amount:int
     portfolio_id:int
     date:str
+
+
+class UserInfo(BaseModel):
+    email:EmailStr
+    username:str

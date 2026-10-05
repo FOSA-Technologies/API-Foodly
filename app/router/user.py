@@ -1,5 +1,6 @@
+
 from typing import List
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from app.database import database
 from app.auth import Oauth
@@ -35,5 +36,20 @@ def change_user_status(content: schemas.UserStatus, db:Session = Depends(databas
     user_query.update({"active": not user.active})
     db.commit()
     return {"message": f"Compte {"activé" if user.active else "désactivé"}"}
-    
+
+
+# modication information utilisateur
+@router.put('/{user_id}', status_code=status.HTTP_202_ACCEPTED)
+def update_user(user_id:int, content:schemas.UserInfo, db:Session=Depends(database.get_db)):
+    query = db.query(models.User).filter(models.User.id == user_id)
+    user = query.first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisation introuvable")
+    # verification si email existe deja
+    exist_email = db.query(models.User).filter(models.User.email == content.email, models.User.id != user_id).first()
+    if exist_email:
+        raise HTTPException(status_code=400, detail="Cet email existe déjà")
+    query.update(content.model_dump(), synchronize_session=False)
+    db.commit()
+    return {"message": "Information modifié"}
     
