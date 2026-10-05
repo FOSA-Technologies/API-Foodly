@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, EmailStr, ConfigDict
+from typing import Annotated, List, Optional
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, StringConstraints
 from sqlalchemy import Boolean, Uuid
 
 
@@ -366,6 +366,19 @@ class PortfolioSupplyHistoryCreation(BaseModel):
     date:str
 
 
-class UserInfo(BaseModel):
-    email:EmailStr
-    username:str
+ShopText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+
+
+class ShopSettingsUpdate(BaseModel):
+    shop_name: ShopText
+    city: ShopText
+    currency: str = Field(pattern=r"^[A-Z]{3}$")  # code ISO 4217 : MAD, EUR, USD, MGA...
+    tax_rate: float = Field(ge=0, le=100)
+
+
+class ShopSettings(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    shop_name: str
+    city: str
+    currency: str
+    tax_rate: float
