@@ -1,7 +1,7 @@
-
 from typing import List
 
 from fastapi import APIRouter, Depends, status, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import database
@@ -64,9 +64,17 @@ def delete_role(id:int, db: Session = Depends(database.get_db), current_user:int
 
 @router.post("/pages", status_code=status.HTTP_201_CREATED)
 def create_pages(content: schemas.PageCreation, db: Session = Depends(database.get_db), ):
+    check_page = db.query(models.Page).filter(models.Page.page_path == content.page_path).first()
+    if check_page:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cette page existe déjà")
+
     new_page = models.Page(**content.model_dump())
     db.add(new_page)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cette page existe déjà")
     db.refresh(new_page)
     return {"message":"Page créée"}
 
@@ -76,3 +84,18 @@ def get_pages(db: Session = Depends(database.get_db), current_user= Depends(
     Oauth.get_current_user)):
     return db.query(models.Page).all()
 
+
+@router.delete('/pages/{id}', status_code=status.HTTP_204_NO_CONTENT)
+def delete_page(id: int, db: Session = Depends(database.get_db), current_user= Depends(
+    Oauth.get_current_user)):
+    page = db.query(models.Page).filter(models.Page.id == id).first()
+    if not page:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cette page n'existe pas")
+
+    check_used_page = db.query(models.RolePage).filter(models.RolePage.page_id == id).first()
+    if check_used_page:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail="Impossible de supprimer, cette page est utilisée par un rôle")
+
+    db.delete(page)
+    db.commit()
