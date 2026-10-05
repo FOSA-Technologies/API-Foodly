@@ -37,3 +37,13 @@ class User(Base):
     role_id = Column(Integer, ForeignKey('roles.id', ondelete="CASCADE"), nullable=False)
     role = relationship('Role')
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
+
+# table pour les categories
+class Category(Base):
+    __tablename__ = "categories"
+    id = Column(Integer, primary_key=True, nullable=False)
+    category_name = Column(String, nullable=False)
+    color_hex = Column(String, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now"), nullable=False)
+
+
