@@ -48,3 +48,12 @@ class Shop(Base):
     city = Column(String(100), nullable=False)
     currency = Column(String(3), nullable=False)
     tax_rate = Column(Numeric(5, 2), nullable=False)
+
+
+
+class Category(Base):
+    __tablename__ = "categories"
+    id= Column(Integer, primary_key=True, nullable=False)
+    color_hex = Column(String, nullable=False)
+    category_name = Column(String, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
