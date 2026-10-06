@@ -120,11 +120,13 @@ class ShopCreate(BaseModel):
 class Category(BaseModel):
     id:int
     category_name:str
+    color_hex:str
     created_at: datetime
 
 
 class CategoryCreate(BaseModel):
     category_name:str
+    color_hex:str
 
 
 class Genre(BaseModel):
