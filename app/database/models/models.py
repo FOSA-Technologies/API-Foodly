@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, TIMESTAMP, text, Boolean, ForeignKey, Text, Numeric, UUID, CheckConstraint
+from sqlalchemy import Column, Integer, String, TIMESTAMP, text, Boolean, ForeignKey, Text, Numeric, UUID, CheckConstraint, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, Relationship
 
@@ -56,4 +56,21 @@ class Category(Base):
     id= Column(Integer, primary_key=True, nullable=False)
     color_hex = Column(String, nullable=False)
     category_name = Column(String, nullable=False)
+    products = Relationship('Product', back_populates='category')
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
+
+
+# pour les produits
+class Product(Base):
+    __tablename__ = "products"
+    id = Column(Integer, primary_key=True)
+    codebar = Column(String(250), nullable=True)
+    brand = Column(String(50), nullable=False)
+    stock = Column(Integer, nullable=False)
+    min_stock = Column(Integer, nullable=False)
+    image_url = Column(String, nullable=False)
+    category_id = Column(Integer, ForeignKey('categories.id', ondelete='CASCADE'))
+    price = Column(Float, nullable= False )
+    depense = Column(Float, nullable = False)
+    category = Relationship('Category', back_populates='products')
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
