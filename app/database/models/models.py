@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, TIMESTAMP, text, Boolean, ForeignKey, Text, Numeric, UUID, CheckConstraint, Float
+from sqlalchemy import Column, Integer, String, TIMESTAMP, text, Boolean, ForeignKey, Text, Numeric, UUID, CheckConstraint, Float, BigInteger, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, Relationship
 
@@ -74,3 +74,24 @@ class Product(Base):
     depense = Column(Float, nullable = False)
     category = Relationship('Category', back_populates='products')
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+
+class Audit(Base):
+    """Journal d'audit : une ligne par action effectuée sur la plateforme (jamais modifiée)."""
+    __tablename__ = "audits"
+    __table_args__ = (
+        CheckConstraint("type IN ('create', 'update', 'delete', 'sale', 'login')", name="audits_type_check"),
+        Index("ix_audits_created_at", "created_at"),
+        Index("ix_audits_type", "type"),
+        Index("ix_audits_module", "module"),
+        Index("ix_audits_user_name", "user_name"),
+    )
+    id = Column(BigInteger, primary_key=True, nullable=False)
+    type = Column(String(10), nullable=False)
+    module = Column(String(50), nullable=False)
+    message = Column(String(500), nullable=False)
+    # L'utilisateur est copié (nom + rôle) pour que l'historique reste lisible
+    # même si le compte est modifié ou supprimé par la suite.
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    user_name = Column(String(100), nullable=False)
+    user_role = Column(String(100), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
