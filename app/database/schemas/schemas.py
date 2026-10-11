@@ -186,12 +186,14 @@ class ColorCreate(BaseModel):
     color_name:str
     hex:str
 
-
+# pour la creation de produit
 class ProductCreate(BaseModel):
     brand:str
     category_id:int
-    genre_id:int
-    description:str
+    min_stock:int
+    price:int
+    image_url:str
+    depense:int
     price:int
     min_stock:int
 
@@ -384,3 +386,24 @@ class ShopSettings(BaseModel):
     city: str
     currency: str
     tax_rate: float
+
+
+class ProductView(BaseModel):
+    id:int
+    brand:str
+    category: Category
+    category_id:int
+    min_stock:int
+    price:int
+    image_url:str
+    depense:int
+    price:int
+    min_stock:int
+
+# # pour le produt
+# class ProductCreate(BaseModel):
+#     brand: str
+#     stock : int
+#     min_stock : int
+#     category_id : int
+#     price : int
