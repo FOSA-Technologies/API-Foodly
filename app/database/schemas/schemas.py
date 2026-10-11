@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Optional, Literal
 from pydantic import BaseModel, EmailStr, ConfigDict, Field, StringConstraints
 from sqlalchemy import Boolean, Uuid
 
@@ -407,3 +407,44 @@ class ProductView(BaseModel):
 #     min_stock : int
 #     category_id : int
 #     price : int
+
+AuditType = Literal["create", "update", "delete", "sale", "login"]
+
+
+class AuditCreate(BaseModel):
+    """Action signalée par le frontend. « login » est réservé au serveur."""
+    type: Literal["create", "update", "delete", "sale"]
+    module: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
+    message: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
+
+
+class AuditData(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    type: AuditType
+    module: str
+    message: str
+    user_id: Optional[int]
+    user_name: str
+    user_role: str
+    created_at: datetime
+
+
+class AuditPage(BaseModel):
+    items: List[AuditData]
+    total: int
+    page: int
+    page_size: int
+    pages: int
+
+
+class AuditStats(BaseModel):
+    total: int
+    today: int
+    by_type: dict[str, int]
+
+
+class AuditFilters(BaseModel):
+    types: List[str]
+    modules: List[str]
+    users: List[str]
