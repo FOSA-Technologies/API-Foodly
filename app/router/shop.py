@@ -6,6 +6,7 @@ from app.auth import Oauth
 from app.database import database
 from app.database.models import models
 from app.database.schemas import schemas
+from app.services.auditServices import AuditService
 
 router = APIRouter(tags=["Shop"])
 
@@ -29,5 +30,7 @@ def update_shop(content: schemas.ShopSettingsUpdate, db: Session = Depends(datab
     stmt = insert(models.Shop).values(id=1, **values).on_conflict_do_update(
         index_elements=[models.Shop.id], set_=values)
     db.execute(stmt)
+    AuditService.record(db, audit_type="update", module="Paramètres",
+                        message="Informations de la boutique mises à jour.", user_id=current_user)
     db.commit()
     return db.get(models.Shop, 1)

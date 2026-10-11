@@ -1,6 +1,5 @@
-
 from typing import List
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from app.database import database
 from app.auth import Oauth
@@ -8,12 +7,13 @@ from app.database.models import models
 from app.database.schemas import schemas
 from app.repositories.userRepository import UserRepository
 from app.services.userServices import  UserService
+from app.services.auditServices import AuditService
 router = APIRouter(tags=["Users"], prefix='/users')
 
 @router.post('/')
 def create_user(content: schemas.UserCreation, db: Session = Depends(database.get_db), current_user= Depends(
     Oauth.get_current_user)):
-    return UserService.create_user(content, db)
+    return UserService.create_user(content, db, current_user)
 
 
 
@@ -33,23 +33,10 @@ def change_user_status(content: schemas.UserStatus, db:Session = Depends(databas
     Oauth.get_current_user)):
     user_query = db.query(models.User).filter(models.User.id == content.user_id)
     user =  UserRepository.find_user_by_id(content.user_id, db)
-    user_query.update({"active": not user.active})
+    new_active = not user.active
+    user_query.update({"active": new_active})
+    AuditService.record(db, audit_type="update", module="Utilisateurs",
+                        message=f"Compte de « {user.username} » {'activé' if new_active else 'désactivé'}.",
+                        user_id=current_user)
     db.commit()
     return {"message": f"Compte {"activé" if user.active else "désactivé"}"}
-
-
-# modication information utilisateur
-@router.put('/{user_id}', status_code=status.HTTP_202_ACCEPTED)
-def update_user(user_id:int, content:schemas.UserInfo, db:Session=Depends(database.get_db)):
-    query = db.query(models.User).filter(models.User.id == user_id)
-    user = query.first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisation introuvable")
-    # verification si email existe deja
-    exist_email = db.query(models.User).filter(models.User.email == content.email, models.User.id != user_id).first()
-    if exist_email:
-        raise HTTPException(status_code=400, detail="Cet email existe déjà")
-    query.update(content.model_dump(), synchronize_session=False)
-    db.commit()
-    return {"message": "Information modifié"}
-    

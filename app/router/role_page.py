@@ -8,6 +8,7 @@ from app.database import database
 from app.auth import Oauth
 from app.database.models import models
 from app.database.schemas import schemas
+from app.services.auditServices import AuditService
 
 router = APIRouter(tags=["Roles & Pages"])
 
@@ -33,6 +34,9 @@ def create_role(content: schemas.RoleCreation, db: Session = Depends(database.ge
     except:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Impossible de créer le role")
 
+    AuditService.record(db, audit_type="create", module="Paramètres",
+                        message=f"Rôle « {new_role.role_name} » créé.", user_id=current_user)
+    db.commit()
     return {"message": "Role créée"}
 
 @router.get('/roles', status_code=status.HTTP_200_OK, response_model=List[schemas.RoleData])
@@ -54,7 +58,10 @@ def delete_role(id:int, db: Session = Depends(database.get_db), current_user:int
     if not role:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Ce role n'existe pas")
 
+    role_name = role.role_name
     role_query.delete(synchronize_session=False)
+    AuditService.record(db, audit_type="delete", module="Paramètres",
+                        message=f"Rôle « {role_name} » supprimé.", user_id=current_user)
     db.commit()
 
     return {"message": "Role supprimé"}
@@ -63,13 +70,16 @@ def delete_role(id:int, db: Session = Depends(database.get_db), current_user:int
 
 
 @router.post("/pages", status_code=status.HTTP_201_CREATED)
-def create_pages(content: schemas.PageCreation, db: Session = Depends(database.get_db), ):
+def create_pages(content: schemas.PageCreation, db: Session = Depends(database.get_db), current_user= Depends(
+    Oauth.get_current_user)):
     check_page = db.query(models.Page).filter(models.Page.page_path == content.page_path).first()
     if check_page:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cette page existe déjà")
 
     new_page = models.Page(**content.model_dump())
     db.add(new_page)
+    AuditService.record(db, audit_type="create", module="Paramètres",
+                        message=f"Page « {content.page_name} » créée.", user_id=current_user)
     try:
         db.commit()
     except IntegrityError:
@@ -97,5 +107,8 @@ def delete_page(id: int, db: Session = Depends(database.get_db), current_user= D
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail="Impossible de supprimer, cette page est utilisée par un rôle")
 
+    page_name = page.page_name
     db.delete(page)
+    AuditService.record(db, audit_type="delete", module="Paramètres",
+                        message=f"Page « {page_name} » supprimée.", user_id=current_user)
     db.commit()

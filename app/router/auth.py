@@ -7,6 +7,7 @@ from app.utils import utils
 from app.auth import Oauth
 from app.database.models import models
 from app.database.schemas import schemas
+from app.services.auditServices import AuditService
 
 router = APIRouter(tags=['Authentification'])
 
@@ -23,4 +24,7 @@ def login(content: schemas.UserLogin, db: Session = Depends(database.get_db)):
     if not check_user.active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Compte non activé")
 
+    AuditService.record(db, audit_type="login", module="Authentification",
+                        message="Connexion au tableau de bord.", user_id=check_user.id)
+    db.commit()
     return Oauth.create_access_token({"user_id": check_user.id})
