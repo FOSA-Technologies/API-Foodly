@@ -37,7 +37,7 @@ os.makedirs('uploads/customers',exist_ok=True)
 os.makedirs('uploads/products',exist_ok=True)
 models.Base.metadata.create_all(bind=database.engine)
 
-# app.mount('/app/uploads/customers', StaticFiles(directory="app/uploads/customers"), name="uploads/customers")
+app.mount('/app/uploads/', StaticFiles(directory="app/uploads"), name="uploads")
 # app.mount('/app/uploads/products', StaticFiles(directory="app/uploads/products"), name="uploads/products")
 app.include_router(user.router)
 app.include_router(role_page.router)

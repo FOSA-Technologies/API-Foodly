@@ -398,6 +398,7 @@ class ProductView(BaseModel):
     image_url:str
     depense:int
     price:int
+    stock:int
     min_stock:int
 
 # # pour le produt
