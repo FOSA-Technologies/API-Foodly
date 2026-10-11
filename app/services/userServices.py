@@ -1,18 +1,18 @@
-
 from fastapi import HTTPException, status
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.utils import utils
 from app.database.models import models
 from app.repositories.userRepository import  UserRepository
 from app.database.schemas import schemas
+from app.services.auditServices import AuditService
 
 
 class UserService:
 
     # Creation d'un utilisateur
     @staticmethod
-    def create_user(content:schemas.UserCreation, db: Session):
+    def create_user(content:schemas.UserCreation, db: Session, actor_id: Optional[int] = None):
         check_user =  UserRepository.find_user_by_email(content.email, db)
         if check_user:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="L'utilisateur existe déjà")
@@ -23,7 +23,11 @@ class UserService:
         new_user = models.User(**content.model_dump())
         hashed_password = utils.hash_password(new_user.password)
         new_user.password = hashed_password
-        UserRepository.add(new_user, db)
+        db.add(new_user)
+        AuditService.record(db, audit_type="create", module="Utilisateurs",
+                            message=f"Utilisateur « {new_user.username} » créé (rôle : {check_role.role_name}).",
+                            user_id=actor_id)
+        db.commit()
         return {"message": "Utilisateur créée"}
 
 
