@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Annotated, List, Optional, Literal
-from pydantic import BaseModel, EmailStr, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, StringConstraints, model_validator
 from sqlalchemy import Boolean, Uuid
 
 
@@ -448,3 +448,35 @@ class AuditFilters(BaseModel):
     types: List[str]
     modules: List[str]
     users: List[str]
+
+
+TableStatus = Literal["free", "occupied", "reserved", "cleaning"]
+TableText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
+TableInfo = Annotated[str, StringConstraints(strip_whitespace=True, max_length=120)]
+
+
+class TableCreate(BaseModel):
+    table_name: TableText
+    zone: TableText
+    capacity: int = Field(ge=1, le=100)
+    status: TableStatus = "free"
+    guests: Optional[int] = Field(default=None, ge=0)
+    info: Optional[TableInfo] = None
+
+    @model_validator(mode="after")
+    def guests_fit_capacity(self):
+        if self.guests is not None and self.guests > self.capacity:
+            raise ValueError("Le nombre de convives dépasse la capacité de la table")
+        return self
+
+
+class TableData(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    table_name: str
+    zone: str
+    capacity: int
+    status: TableStatus
+    guests: Optional[int]
+    info: Optional[str]
+    created_at: datetime
