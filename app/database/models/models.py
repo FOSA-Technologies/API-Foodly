@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, TIMESTAMP, text, Boolean, ForeignKey, Text, Numeric, UUID, CheckConstraint, Float, BigInteger, Index
+from sqlalchemy import Column, Integer, String, TIMESTAMP, text, Boolean, ForeignKey, Text, Numeric, UUID, CheckConstraint, Float, BigInteger, Index, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, Relationship
 
@@ -95,3 +95,24 @@ class Audit(Base):
     user_name = Column(String(100), nullable=False)
     user_role = Column(String(100), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
+
+
+class DiningTable(Base):
+    """Table de la salle (plan de salle) : zone, capacité et statut d'occupation."""
+    __tablename__ = "dining_tables"
+    id = Column(Integer, primary_key=True, nullable=False)
+    table_name = Column(String(60), nullable=False)
+    zone = Column(String(60), nullable=False)
+    capacity = Column(Integer, nullable=False)
+    # free = libre, occupied = occupée, reserved = réservée, cleaning = nettoyage
+    status = Column(String(10), nullable=False, server_default="free")
+    guests = Column(Integer, nullable=True)
+    info = Column(String(120), nullable=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
+    __table_args__ = (
+        CheckConstraint("capacity BETWEEN 1 AND 100", name="dining_tables_capacity_check"),
+        CheckConstraint("status IN ('free', 'occupied', 'reserved', 'cleaning')", name="dining_tables_status_check"),
+        CheckConstraint("guests IS NULL OR (guests >= 0 AND guests <= capacity)", name="dining_tables_guests_check"),
+        # Deux tables ne peuvent pas porter le même nom (sans tenir compte de la casse)
+        Index("uq_dining_tables_name_lower", func.lower(table_name), unique=True),
+    )
