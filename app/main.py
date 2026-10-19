@@ -4,7 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 from .database import database
 from .database.models import models
-from .router import user, role_page, auth, shop, category, product, audits
+from .router import user, role_page, auth, shop, category, product, audits, tables
 import os
 # config = SecurityConfig(
 #     enable_rate_limiting=True,
@@ -46,6 +46,7 @@ app.include_router(shop.router)
 app.include_router(category.router)
 app.include_router(product.router)
 app.include_router(audits.router)
+app.include_router(tables.router)
 app.get('/')
 def root():
     return {"message": "Hello world"}
