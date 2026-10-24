@@ -11,7 +11,7 @@ from app.services.auditServices import AuditService
 router = APIRouter(tags=["Shop"])
 
 # Valeurs renvoyées tant que la boutique n'a jamais été configurée
-DEFAULT_SHOP = {"shop_name": "", "city": "", "currency": "MAD", "tax_rate": 0}
+DEFAULT_SHOP = {"shop_name": "", "city": "", "currency": "MGA", "tax_rate": 0}
 
 
 @router.get('/shop', status_code=status.HTTP_200_OK, response_model=schemas.ShopSettings)

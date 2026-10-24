@@ -376,7 +376,7 @@ ShopText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1,
 class ShopSettingsUpdate(BaseModel):
     shop_name: ShopText
     city: ShopText
-    currency: str = Field(pattern=r"^[A-Z]{3}$")  # code ISO 4217 : MAD, EUR, USD, MGA...
+    currency: str = Field(pattern=r"^[A-Z]{3}$")  # code ISO 4217 : MGA, EUR, USD, MGA...
     tax_rate: float = Field(ge=0, le=100)
 
 
